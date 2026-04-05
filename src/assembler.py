@@ -274,7 +274,6 @@ def dm(args, symbols, code, line):
         val = evaluate(expr, symbols, code.address)
         if (val[0] in {'<08str>'}):
             val_string = val[1].replace('"', '')
-            # print("DEBUG dm val_string /%s/" % val_string)
             for num in map(ords.ord, val_string):
                 if num != None:
                     for i in num:
@@ -399,13 +398,20 @@ def lexer(lines):
     code_lines = [x for x in lines if len(x[1])]
     for line in code_lines:
         tl = []
-        # This is part of the 'dm' bug; "in" breaks on spaces
+        # This is part of the 'dm' bug; "in" breaks on spaces. It's kind of stupid
+        # to break on spaces, because it causes all kinds of weirdness with quoted
+        # strings.
         for wordstr in line[1]:
             word = wordstr.strip()
+            #print("DEBUG lexer word /%s/ wordstr /%s/" % (word, wordstr))
             if word in table.mnm_0:
                 tl.append(["<mnm_0>", word])
+            elif re.match(r'^\".*\"$', word):
+                # Entire quoted string in this word.
+                tl.append(["<08str>", word])
+                continue
             elif ('"' in wordstr and buildString):
-                # contains a (closing) double quote
+                # Contains a (closing) double quote
                 buildString = False
                 builtString += wordstr
                 tl.append(["<08str>", builtString.strip()])
@@ -613,13 +619,14 @@ def parse_drct(tokens, symbols, code, line):
     ##################################################
     # [drct_1]
     if (tokens[0][0] == "<drct_1>"):
+        #print("DEBUG %s" % line)
         data.append(tokens.pop(0))
         if (not tokens):
-            error("Directive missing argument!", line)
+            error("Directive missing argument 1!", line)
             return er
         expr = parse_expr(*args)
         if (not expr):
-            error("Directive has bad argument A!", line)
+            error("Directive has bad argument 2!", line)
             return er
         if (expr == er):
             return er
@@ -640,11 +647,11 @@ def parse_drct(tokens, symbols, code, line):
         data.append(tokens.pop(0))
 
         if (not tokens):
-            error("Directive missing argument!", line)
+            error("Directive missing argument 3!", line)
             return er
         expr = parse_expr(*args)
         if (not expr):
-            error("Directive has bad argument B!", line)
+            error("Directive has bad argument 4!", line)
             return er
         elif (expr == er):
             return er
@@ -660,7 +667,7 @@ def parse_drct(tokens, symbols, code, line):
                 return er
             expr = parse_expr(*args)
             if (not expr):
-                error("Directive has bad argument C!", line)
+                error("Directive has bad argument 5!", line)
                 return er
             elif (expr == error):
                 return er
@@ -680,11 +687,11 @@ def parse_drct(tokens, symbols, code, line):
             return er
         data.append(tokens.pop(0))
         if (not tokens):
-            error("Directive missing argument!", line)
+            error("Directive missing argument 6!", line)
             return er
         expr = parse_expr(*args)
         if (not expr):
-            error("Directive has bad argument D!", line)
+            error("Directive has bad argument 7!", line)
             return er
         elif (expr == er):
             return er
@@ -932,6 +939,7 @@ def parse_line(tokens, symbols, code, line):
     # or code
     if (len(data) < 2):
         tokens.pop(0)
+        #print("DEBUG data %s" % data)
         error("Bad Initial Identifier!", line)
         return er
     ###############################
