@@ -26,33 +26,33 @@ class Code:
     def __init__(self):
         self.data = []
         self.address = 0
-        self.label = ""
+        self.label = ''
 
-    def write(self, data, line, instrct = ""):
+    def write(self, data, line, instrct = ''):
         # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
 
-        if(self.address > 65535):
-            error("Cannot write past 0xFFFF. Out of memory!",line)
+        if self.address > 65535:
+            error("Cannot write past 0xFFFF. Out of memory!", line)
             sys.exit(2)
 
-        addressStr = '0x{0:0{1}X}'.format(self.address,4)
+        addressStr = '0x{0:0{1}X}'.format(self.address, 4)
 
-        if(data != "expr"):
-            data = '0x{0:0{1}X}'.format(data,2)
+        if data != "expr":
+            data = '0x{0:0{1}X}'.format(data, 2)
 
         comment = ''
         lineNumStr = ''
         pc = line[0][1]
-        if(len(self.data) == 0 or pc != self.data[-1][0][0][1]):
+        if len(self.data) == 0 or pc != self.data[-1][0][0][1]:
             comment = line[2]
             lineNumStr = str(line[0][0])
 
         self.data.append([line, lineNumStr, addressStr, self.label, instrct, data, comment])
         self.address += 1
-        self.label = ""
+        self.label = ''
 
     def update(self, data, index):
-        self.data[index][5] = '0x{0:0{1}X}'.format(data,2)
+        self.data[index][5] = '0x{0:0{1}X}'.format(data, 2)
 
 ##############################################################################################################
 # File reading functions
@@ -61,36 +61,36 @@ def read(name):
     # This function reads in lines from the asm file
     # It processes them and puts them into the form:
     # [[Line_number, Program_Counter] [body] [comment]]
-    # Line_number corrisponds to the line on the 
+    # Line_number corrisponds to the line on the
     # source code. the Program_Counter is incremented
     # every time there is a non-empty line. Note that
     # two consecutive PC locations do NOT nessisarily
     # corrispond to two consecutive address locations
 
     # [[Line_number, Program_Counter] [body] 'comment']
-    
+
     file = open(name, 'r')
     lines = []
     lineNumber = 0
     pc = 0
-    
+
     for lineNumber, line in enumerate(file, start = 1):
         line = line.strip()
-        if(line):
+        if line:
             block = []
             rest = []
             comment = ''
             commentIndex = line.find(";")
-            if(commentIndex != -1):
+            if commentIndex != -1:
                 comment = line[commentIndex:]
                 rest = line[:commentIndex].strip()
             else:
                 rest = line
 
             block.append([lineNumber, pc])
-            if(rest):
+            if rest:
                 split_rest = re.split(r'([-+,\s]\s*)', rest)
-                split_rest = [word for word in split_rest if not re.match(r'^\s*$',word)]
+                split_rest = [word for word in split_rest if not re.match(r'^\s*$', word)]
                 split_rest = list(filter(None, split_rest))
                 block.append(split_rest)
             else:
@@ -111,62 +111,62 @@ def error(message, line):
 def output(code, name, args):
     # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
     if args.bin:
-        f = open(name,'wb') if name else sys.stdout
+        f = open(name, 'wb') if name else sys.stdout
     else:
-        f = open(name,'w') if name else sys.stdout
+        f = open(name, 'w') if name else sys.stdout
 
     width = 0
     bin = bytes()
     if args.bin:
         width = 1
-    
+
     if args.lineNum:
-        print('{:<15}'.format("Line number"),file=f,end='')
+        print('{:<15}'.format("Line number"), file=f, end='')
         width += 15
     if args.address:
-        print('{:<10}'.format("Address"),file=f,end='')
+        print('{:<10}'.format("Address"), file=f, end='')
         width += 10
     if args.hex:
-        print('{:<10}'.format("Hex Code"),file=f,end='')
+        print('{:<10}'.format("Hex Code"), file=f, end='')
         width += 10
     if args.label:
-        print('{:<30}'.format("Label"),file=f,end='')
+        print('{:<30}'.format("Label"), file=f, end='')
         width += 30
     if args.instruction:
-        print('{:<30}'.format("Instruction"),file=f,end='')
+        print('{:<30}'.format("Instruction"), file=f, end='')
         width += 30
     if args.comment:
-        print('{:<20}'.format("Comment"),file=f,end='')
+        print('{:<20}'.format("Comment"), file=f, end='')
         width += 20
 
     if not args.bin:
-        print("",file=f)
-    
-    for i in range(0,width):
+        print('', file=f)
+
+    for i in range(0, width):
         if not args.bin:
-            print("-",file=f,end='')
+            print("-", file=f, end='')
 
     if not args.bin:
-        print("",file=f)
+        print('', file=f)
 
     if width:
         for l in code.data:
             if args.lineNum:
-                print('{:<15}'.format(l[1]),file=f,end='')
+                print('{:<15}'.format(l[1]), file=f, end='')
             if args.address:
-                print('{:<10}'.format(l[2]),file=f,end='')
+                print('{:<10}'.format(l[2]), file=f, end='')
             if args.hex:
-                print('{:<10}'.format(l[5]),file=f,end='')
+                print('{:<10}'.format(l[5]), file=f, end='')
             if args.label:
-                print('{:<30}'.format(l[3]),file=f,end='')
+                print('{:<30}'.format(l[3]), file=f, end='')
             if args.instruction:
-                print('{:<30}'.format(l[4]),file=f,end='')
+                print('{:<30}'.format(l[4]), file=f, end='')
             if args.bin:
                bin += binascii.unhexlify(l[5].split('x')[1])
             if args.comment:
-                print('{:<20}'.format(l[6]),file=f,end='')
+                print('{:<20}'.format(l[6]), file=f, end='')
             if not args.bin:
-                print("",file=f)
+                print('', file=f)
 
         if args.bin:
             f.write(bin)
@@ -176,7 +176,7 @@ def output(code, name, args):
 
 def output_basic(code, name, args):
     # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
-    f = open(name,'w') if name else sys.stdout
+    f = open(name, 'w') if name else sys.stdout
     if name:
         simName = os.path.basename(name).split('.')[0]
     else:
@@ -185,10 +185,10 @@ def output_basic(code, name, args):
     address = code.data[0][2]
     length = len(code.data)
     print("1 CLS:?\"Loading Machine Code File", file=f)
-    print(f"2 FORN={int(address,16)}TO{int(address, 16)+length}:READA:POKEN,A:NEXT", file=f)
-    print(f"3 ?\"Don't forget to run clear 256,{int(address,16)}", file=f)
+    print(f"2 FORN={int(address, 16)}TO{int(address, 16) + length}:READA:POKEN,A:NEXT", file=f)
+    print(f"3 ?\"Don't forget to run clear 256,{int(address, 16)}", file=f)
     if args.trs100_save:
-      print(f"4 SAVEM\"{simName}.CO\",{int(address,16)},{int(address,16)+length},{int(address,16)}", file=f)
+      print(f"4 SAVEM\"{simName}.CO\",{int(address, 16)},{int(address, 16) + length},{int(address, 16)}", file=f)
     if args.trs100_new:
       print(f"5 NEW", file=f)
 
@@ -201,18 +201,17 @@ def output_basic(code, name, args):
     linenum = 6
     for chunk in chunks:
         # Convert each datum from hex to decimal.
-        decimal_string_list=[f"{int(datum[5],16)}" for datum in chunk]
+        decimal_string_list=[f"{int(datum[5], 16)}" for datum in chunk]
         linedata = ','.join(decimal_string_list)
         print(f"{linenum} DATA {linedata}", file=f)
         linenum += 1
     # End with a zero
     print(f"{linenum} DATA 0", file=f)
-    print(f"Size: {length} bytes")
 
     if f is not sys.stdout:
         f.close()
 
-class myord:
+class Myord:
     control = 0
     def ord(self, ch):
         if ch == '\\':
@@ -222,7 +221,7 @@ class myord:
             return [0x5C, ord(ch)]
         elif self.control == 1:
             self.control = 0
-            return [table.controlchars['\\'+ch]]
+            return [table.controlchars['\\' + ch]]
         else:
             return [ord(ch)]
 
@@ -230,51 +229,52 @@ class myord:
 # Directive functions
 def org(arg, symbols, code, line):
     val = evaluate(arg, symbols, code.address)
-    if(len(val) == 1):
+    if (len(val) == 1):
         num = val[0]
-        if(num < 0):
-            error("Expression must be positive!",line)
+        if (num < 0):
+            error("Expression must be positive!", line)
             return 0
-        elif(num < code.address):
-            error("Cannot move origin backwards!",line)
+        elif (num < code.address):
+            error("Cannot move origin backwards!", line)
             return 0
-        elif(num > 65535):
-            error("Cannot set origin past 0xFFFF!",line)
+        elif (num > 65535):
+            error("Cannot set origin past 0xFFFF!", line)
             return 0
         else:
             code.address = num
-            if(code.label):
-                symbols.labelDefs[code.label[:-1]] = '{0:0{1}X}'.format(num,4)
+            if (code.label):
+                symbols.labelDefs[code.label[:-1]] = '{0:0{1}X}'.format(num, 4)
             return 1
     else:
-        error("Expression depends on unresolved symbol!",line)
+        error("Expression depends on unresolved symbol!", line)
         return 0
 
 def db(args, symbols, code, line):
     for expr in args:
         val = evaluate(expr, symbols, code.address)
-        if(len(val) == 1):
+        if (len(val) == 1):
             num = val[0]
-            if(num < 0):
-                error("Expression must be positive!",line)
+            if (num < 0):
+                error("Expression must be positive!", line)
                 return 0
-            elif(num > 255):
+            elif (num > 255):
                 error("Expression too large! Must evaluate to an 8-bit number!", line)
                 return 0
             else:
-                code.write(num,line,instrct="db")
+                code.write(num, line, instrct="db")
         else:
-            error("Expression depends on unresolved symbol!",line)
+            error("Expression depends on unresolved symbol!", line)
             return 0
     return 1
 
 def dm(args, symbols, code, line):
-    ords = myord()
+    ords = Myord()
 
     for expr in args:
         val = evaluate(expr, symbols, code.address)
-        if(val[0] in {'<08str>'}):
-            val_string = val[1].replace("\"","")
+        if (val[0] in {'<08str>'}):
+            val_string = val[1].replace('"', '')
+            # print("DEBUG dm val_string /%s/" % val_string)
             for num in map(ords.ord, val_string):
                 if num != None:
                     for i in num:
@@ -282,64 +282,66 @@ def dm(args, symbols, code, line):
                             error("Expression too large! Must evaluate to an 8-bit number!", line)
                             return 0
                         elif i < 0:
-                            error("Expression must be positive!",line)
+                            error("Expression must be positive!", line)
                             return 0
                         else:
-                            code.write(i, line,instrct="dm")
+                            code.write(i, line, instrct="dm")
                 else:
                     pass
         else:
-            error("Expression depends on unresolved symbol!",line)
+            error("Expression depends on unresolved symbol!", line)
             return 0
     return 1
 
 def equ(args, symbols, code, line):
     name = args[0][1]
-    if(name in table.reserved):
-        error("Cannot use reserved keyword in equ directive!",line)
+    if (name in table.reserved):
+        error("Cannot use reserved keyword in equ directive!", line)
         return 0
-    elif(name in (symbols.eightBitDefs, symbols.sixteenBitDefs)):
-        error("Symbol already defined!",line)
+    elif (name in (symbols.eightBitDefs, symbols.sixteenBitDefs)):
+        error("Symbol already defined!", line)
         return 0
-    elif(name in symbols.labelDefs):
-        error("Symbol conflicts with previous label definition!",line)
+    elif (name in symbols.labelDefs):
+        error("Symbol conflicts with previous label definition!", line)
         return 0
 
     val = evaluate(args[1], symbols, code.address)
-    if(len(val) == 1):
+    if (len(val) == 1):
         num = val[0]
         if num > 65535:
-            error("Expression evaluates to value greater than 0xFFFF!",line)
+            error("Expression evaluates to value greater than 0xFFFF!", line)
             return 0
         elif num > 255:
-            symbols.sixteenBitDefs[name] = '{0:0{1}X}'.format(num,4)
+            symbols.sixteenBitDefs[name] = '{0:0{1}X}'.format(num, 4)
             return 1
         elif num >= 0:
-            symbols.eightBitDefs[name] = '{0:0{1}X}'.format(num,2)
+            symbols.eightBitDefs[name] = '{0:0{1}X}'.format(num, 2)
             return 1
         else:
-            error("Expression must be positive!",line)
+            error("Expression must be positive!", line)
             return 0
     else:
-        error("Expression depends on unresolved symbol!",line)
+        error("Expression depends on unresolved symbol!", line)
         return 0
 
 def ds(arg, symbols, code, line):
     val = evaluate(arg, symbols, code.address)
-    if(len(val) == 1):
+    if (len(val) == 1):
         num = val[0]
-        if(num < 0):
-            error("Expression must be positive!",line)
+        if (num < 0):
+            error("Expression must be positive!", line)
             return 0
-        elif(num + code.address > 65536):
-            error("Cannot define that much storage! Only " + str((65536 - code.address)) + 
-                  " bytes left. Overflow by " + str(num + code.address - 65536) + ".",line)
+        elif (num + code.address > 65536):
+            error("Cannot define that much storage! Only " + str((65536 - code.address))  + 
+                  " bytes left. Overflow by " + str(num + code.address - 65536) + ".", line)
             return 0
         else:
-            code.address += num
+            # insert zeros instead of just skipping those addresses
+            for i in range(num):
+                code.write(0, line, instrct="db")
             return 1
     else:
-        error("Expression depends on unresolved symbol!",line)
+        error("Expression depends on unresolved symbol!", line)
         return 0
 
 directives = {
@@ -352,7 +354,7 @@ directives = {
     "ds":  [ds, 1, 1, "ds"],
     "dm":  [dm, 1, 1, "dm"],
 }
-     
+
 def secondPass(symbols, code):
     # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
     i = 0
@@ -361,62 +363,67 @@ def secondPass(symbols, code):
         codeLine = code.data[i]
         line = codeLine[0]
         data = codeLine[5]
-        if(data == "expr"):
+        if (data == "expr"):
             expr, kind  = symbols.expr.pop(0)
             val = evaluate(expr, symbols, address)
-            if(len(val) == 1):
+            if (len(val) == 1):
                 numb = val[0]
-                if(numb < 0):
-                    error("Expression must be positive!",line)
+                if (numb < 0):
+                    error("Expression must be positive!", line)
                     return 0
-                elif(kind == "data"):
-                    if(numb > 255):
-                        error("Expression must evaluate to 8-bit number!",line)
+                elif (kind == "data"):
+                    if (numb > 255):
+                        error("Expression must evaluate to 8-bit number!", line)
                         return 0
                     else:
-                        code.update(numb,i)
-                elif(kind == "address"):
-                    if(numb > 65535):
-                        error("Expression must evaluate to 16-bit number!",line)
+                        code.update(numb, i)
+                elif (kind == "address"):
+                    if (numb > 65535):
+                        error("Expression must evaluate to 16-bit number!", line)
                         return 0
                     else:
-                        code.update((numb & 0xff),i)
-                        code.update((numb >> 8),i+1)
+                        code.update((numb & 0xff), i)
+                        code.update((numb >> 8), i + 1)
                         i += 1
             else:
-                error("Expression relies on unresolved symbol!",line)
+                error("Expression relies on unresolved symbol!", line)
                 return 0
         else:
-            address = int(codeLine[2], base=16) 
+            address = int(codeLine[2], base=16)
         i += 1
 
 def lexer(lines):
     tokens = []
     buildString = False
-    buildedString = ""
+    builtString = ''
     code_lines = [x for x in lines if len(x[1])]
     for line in code_lines:
         tl = []
+        # This is part of the 'dm' bug; "in" breaks on spaces
         for wordstr in line[1]:
             word = wordstr.strip()
             if word in table.mnm_0:
                 tl.append(["<mnm_0>", word])
-            elif('"' in wordstr and buildString):
+            elif ('"' in wordstr and buildString):
+                # contains a (closing) double quote
                 buildString = False
-                buildedString +=wordstr
-                tl.append(["<08str>", buildedString])
-                buildedString = ""
+                builtString += wordstr
+                tl.append(["<08str>", builtString.strip()])
+                builtString = ''
                 continue
-            elif(buildString):
-                buildedString += wordstr
+            elif buildString:
+                # This is a hack; we force a single space after each word, but there might have been multiple spaces.
+                builtString += wordstr + " "
                 continue
-            elif(re.match(r'^\"', word)):
+            elif re.match(r'^\"', word):
+                # Starts with a double quote
                 buildString = True
-                buildedString = wordstr
+                # This is a hack; we force a single space after each word, but there might have been multiple spaces.
+                builtString = wordstr + " "
                 continue
-            elif(re.match(r'^\'', word)):
+            elif (re.match(r'^\'', word)):
                 tl.append(["<08ch>", word])
-            elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
+            elif (re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
                 tl.append(["<08nm>", word])
             elif word in table.mnm_0_e:
                 tl.append(["<mnm_0_e>", word])
@@ -440,30 +447,31 @@ def lexer(lines):
                 tl.append(["<drct_p>", word])
             elif word in table.drct_w:
                 tl.append(["<drct_w>", word])
-            elif re.match(r'^.+:$',word):
+            elif re.match(r'^.+:$', word):
                 tl.append(["<lbl_def>", word])
-            elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', word)):
+            elif (re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', word)):
                 tl.append(["<16nm>", word])
-            elif(re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$', word)):
+            elif (re.match(r'^[A-Za-z_]+[A-Za-z0-9_]*$', word)):
                 tl.append(["<symbol>", word])
             elif word == "$":
                 tl.append(["<lc>", word])
             else:
                 tl.append(["<idk_man>", word])
                 error("Unknown token: " + word, line)
-                return [0 , 0]
+                return [0, 0]
 
         tokens.append(tl)
 
     return [code_lines, tokens]
+
 ######################################################################################
 def evaluate(expr, symbols, address):
     sign, pop, result = 1, 2, 0
     while(expr):
         ###################################
-        if(len(expr) >= 2):
+        if (len(expr) >= 2):
             pop = 2
-            if(expr[-2][0] == "<plus>"):
+            if (expr[-2][0] == "<plus>"):
                 sign = 1
             else:
                 sign = -1
@@ -471,31 +479,31 @@ def evaluate(expr, symbols, address):
             pop = 1
             sign = 1
         ###################################
-        if(expr[-1][0] in {"<08nm>", "<16nm>", "<numb>"}):
+        if (expr[-1][0] in {"<08nm>", "<16nm>", "<numb>"}):
             result += sign*int(expr[-1][1], base=16)
             expr = expr[:-pop]
-        elif(expr[-1][0] in {"<08ch>"}):
-            chars = expr[-1][1].replace("'","")
+        elif (expr[-1][0] in {"<08ch>"}):
+            chars = expr[-1][1].replace("'", '')
             if len(chars) == 1:
                 result += ord(chars)
             if len(chars) == 2:
                 result += table.controlchars[chars]
             expr = expr[:-pop]
-        elif(expr[-1][0] == "<lc>"):
+        elif (expr[-1][0] == "<lc>"):
             result += sign*(address)
-            expr = expr[:-pop] 
+            expr = expr[:-pop]
         else:
-            if(expr[-1][1] in symbols.eightBitDefs):
+            if (expr[-1][1] in symbols.eightBitDefs):
                 result += sign*int(symbols.eightBitDefs[expr[-1][1]], base=16)
                 expr = expr[:-pop]
-            elif(expr[-1][1] in symbols.sixteenBitDefs):
+            elif (expr[-1][1] in symbols.sixteenBitDefs):
                 result += sign*int(symbols.sixteenBitDefs[expr[-1][1]], base=16)
                 expr = expr[:-pop]
-            elif(expr[-1][1] in symbols.labelDefs):
+            elif (expr[-1][1] in symbols.labelDefs):
                 result += sign*int(symbols.labelDefs[expr[-1][1]], base=16)
                 expr = expr[:-pop]
             else:
-                expr += [["<plus>", "+"],["<numb>", hex(result)]]
+                expr += [["<plus>", "+"], ["<numb>", hex(result)]]
                 return expr
         ###################################
     return [result]
@@ -524,20 +532,21 @@ def evaluate(expr, symbols, address):
 def parse(lines, symbols, code):
 
     code_lines, tokenLines = lexer(lines)
-    if(code_lines == 0):
+    if (code_lines == 0):
         sys.exit(1)
 
     tree = []
 
     for tokens, line in zip(tokenLines, code_lines):
         parsed_line = parse_line(tokens, symbols, code, line)
-        if(parsed_line[0] == "<error>"):
+        if (parsed_line[0] == "<error>"):
             sys.exit(1)
         tree.append(parsed_line)
 
     status = secondPass(symbols, code)
-    if(status == 0):
+    if (status == 0):
         sys.exit(1)
+
 ######################################################################################
 def parse_expr(tokens, symbols, code, line):
     data = ["<expr>"]
@@ -546,48 +555,49 @@ def parse_expr(tokens, symbols, code, line):
         return 0
     ##################################################
     while(tokens):
-        if(tokens[0][0] in {"<plus>", "<minus>"}):
+        if (tokens[0][0] in {"<plus>", "<minus>"}):
             data.append(tokens.pop(0))
-        elif(len(data) > 1):
+        elif (len(data) > 1):
             return data
-        if(len(data) > 1 and (not tokens)):
-            error("Expression missing number/symbol!",line)
+        if (len(data) > 1 and (not tokens)):
+            error("Expression missing number/symbol!", line)
             return er
-        if(tokens[0][0] not in {"<08str>", "<08ch>", "<08nm>", "<16nm>", "<symbol>", "<lc>"}):
-            if(tokens[0][0] not in {"<plus>", "<minus>"}):
-                if(len(data) > 1):
-                    error("Expression has bad identifier!",line)
+        if (tokens[0][0] not in {"<08str>", "<08ch>", "<08nm>", "<16nm>", "<symbol>", "<lc>"}):
+            if (tokens[0][0] not in {"<plus>", "<minus>"}):
+                if (len(data) > 1):
+                    error("Expression has bad identifier!", line)
                     return er
                 else:
                     return 0
             else:
-                error("Expression has extra operator!",line)
+                error("Expression has extra operator!", line)
                 return er
         tok = tokens.pop(0)
         data.append(tok)
     return data
+
 ######################################################################################
 def parse_lbl_def(tokens, symbols, code, line):
     er = ["<error>"]
     if not tokens:
         return 0
-    if(tokens[0][0] == "<lbl_def>"):
+    if (tokens[0][0] == "<lbl_def>"):
         lbl = tokens[0][1]
         if lbl[:-1] in symbols.labelDefs:
-            error("Label already in use!",line)
+            error("Label already in use!", line)
             return er
         elif lbl[:-1] in table.reserved:
-            error("Label cannot be keyword!",line)
+            error("Label cannot be keyword!", line)
             return er
-        elif(re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', lbl[:-1]) or
+        elif (re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', lbl[:-1]) or
              re.match(r'^(0[Xx])?[0-9A-Fa-f]{4}$', lbl[:-1])):
-            error("Label cannot be hex number!",line)
+            error("Label cannot be hex number!", line)
             return er
         elif lbl[:-1] in (symbols.eightBitDefs, symbols.sixteenBitDefs):
-            error("Label conflicts with previous symbol definition",line)
+            error("Label conflicts with previous symbol definition", line)
             return er
         else:
-            symbols.labelDefs[lbl[:-1]] = '{0:0{1}X}'.format(code.address,4)
+            symbols.labelDefs[lbl[:-1]] = '{0:0{1}X}'.format(code.address, 4)
             code.label = lbl
         return tokens.pop(0)
     else:
@@ -602,92 +612,92 @@ def parse_drct(tokens, symbols, code, line):
         return 0
     ##################################################
     # [drct_1]
-    if(tokens[0][0] == "<drct_1>"):
+    if (tokens[0][0] == "<drct_1>"):
         data.append(tokens.pop(0))
-        if(not tokens):
-            error("Directive missing argument!",line)
+        if (not tokens):
+            error("Directive missing argument!", line)
             return er
         expr = parse_expr(*args)
-        if(not expr):
+        if (not expr):
             error("Directive has bad argument A!", line)
             return er
-        if(expr == er):
+        if (expr == er):
             return er
         data.append(expr)
         arg = data[2][1:]
-        status = directives[data[1][1]][0](arg,symbols,code,line)
+        status = directives[data[1][1]][0](arg, symbols, code, line)
         if not status:
             return er
         return data
     ##################################################
     # [drct_p]
-    elif(tokens[0][0] in {"<drct_p>", "<08nm>"}):
+    elif (tokens[0][0] in {"<drct_p>", "<08nm>"}):
         drct_p = tokens[0][1]
-        if(tokens[0][0] == "<08nm>"):
-            if(tokens[0][1] != "db"):
+        if (tokens[0][0] == "<08nm>"):
+            if (tokens[0][1] != "db"):
                 return 0
             tokens[0][0] = "<drct_p>"
         data.append(tokens.pop(0))
 
-        if(not tokens):
-            error("Directive missing argument!",line)
+        if (not tokens):
+            error("Directive missing argument!", line)
             return er
         expr = parse_expr(*args)
-        if(not expr):
-            error("Directive has bad argument B!",line)
+        if (not expr):
+            error("Directive has bad argument B!", line)
             return er
-        elif(expr == er):
+        elif (expr == er):
             return er
         data.append(expr)
 
         while(tokens):
-            if(tokens[0][0] != "<comma>"):
-                error("Missing comma!",line)
+            if (tokens[0][0] != "<comma>"):
+                error("Missing comma!", line)
                 return er
             data.append(tokens.pop(0))
-            if(not tokens):
-                error("Directive missing last argument or has extra comma!",line)
+            if (not tokens):
+                error("Directive missing last argument or has extra comma!", line)
                 return er
             expr = parse_expr(*args)
-            if(not expr):
-                error("Directive has bad argument C !",line)
+            if (not expr):
+                error("Directive has bad argument C!", line)
                 return er
-            elif(expr == error):
+            elif (expr == error):
                 return er
             data.append(expr)
 
         d_args = [x[1:] for x in data[2:] if x[0] != "<comma>"]
-        status = directives[drct_p][0](d_args,symbols,code,line)
+        status = directives[drct_p][0](d_args, symbols, code, line)
         if not status:
             return er
         return data
     ##################################################
     # [drct_w]
-    elif(tokens[0][0] == "<symbol>"):
+    elif (tokens[0][0] == "<symbol>"):
         data.append(tokens.pop(0))
-        if(not tokens or tokens[0][0] != "<drct_w>"):
-            error("Bad Identifier!",line)
+        if (not tokens or tokens[0][0] != "<drct_w>"):
+            error("Bad Identifier!", line)
             return er
         data.append(tokens.pop(0))
-        if(not tokens):
-            error("Directive missing argument!",line)
+        if (not tokens):
+            error("Directive missing argument!", line)
             return er
         expr = parse_expr(*args)
-        if(not expr):
-            error("Directive has bad argument D !",line)
+        if (not expr):
+            error("Directive has bad argument D!", line)
             return er
-        elif(expr == er):
+        elif (expr == er):
             return er
         data.append(expr)
         ##############################################
         arg1 = data[1]
         arg2 = data[3][1:]
-        status = directives[data[2][1]][0]([arg1,arg2],symbols,code,line)
+        status = directives[data[2][1]][0]([arg1, arg2], symbols, code, line)
         if not status:
             return er
         return data
-    elif(tokens[0][0] == "<drct_w>"):
-        error("Directive missing initial argument!",line)
+    elif (tokens[0][0] == "<drct_w>"):
+        error("Directive missing initial argument!", line)
         return er
 
     return 0
@@ -701,233 +711,234 @@ def parse_code(tokens, symbols, code, line):
         return 0
     ##################################################
     # [mnm_0]
-    if(tokens[0][0] == "<mnm_0>"):
+    if (tokens[0][0] == "<mnm_0>"):
         inst = tokens[0][1]
         data.append(tokens.pop(0))
-        code.write(instructions.instructions[inst],line,instrct=inst)
+        code.write(instructions.instructions[inst], line, instrct=inst)
         return data
     ##################################################
     # [mnm_0_e]
-    elif(tokens[0][0] in {"<mnm_0_e>", "<08nm>"}):
-        if(tokens[0][0] == "<08nm>"):
-            if(tokens[0][1] != "CC"):
+    elif (tokens[0][0] in {"<mnm_0_e>", "<08nm>"}):
+        if (tokens[0][0] == "<08nm>"):
+            if (tokens[0][1] != "CC"):
                 return 0
             tokens[0][0] = "<mnm_0_e>"
         inst = tokens[0][1]
         data.append(tokens.pop(0))
 
-        if(not tokens):
-            error("Instruction missing argument!",line)
+        if (not tokens):
+            error("Instruction missing argument!", line)
             return er
 
         expr = parse_expr(*args)
-        if(not expr):
-            error("Instruction has bad argument!",line)
+        if (not expr):
+            error("Instruction has bad argument!", line)
             return er
-        if(expr == er):
+        if (expr == er):
             return er
         data.append(expr)
 
         expr_str = " ".join([x[1] for x in expr[1:]])
-        if(inst in instructions.instructions):
-            code.write(instructions.instructions[inst],line,instrct=inst+" "+expr_str)
+        if (inst in instructions.instructions):
+            code.write(instructions.instructions[inst], line, instrct=inst + " " + expr_str)
         else:
-            error("Bad instruction: "+inst,line)
+            error("Bad instruction: " + inst, line)
             return er
 
-        val = evaluate(expr[1:],symbols,code.address-1)
-        if(len(val) == 1):
+        val = evaluate(expr[1:], symbols, code.address-1)
+        if (len(val) == 1):
             numb = val[0]
-            if(numb < 0):
-                error("Expression must be positive!",line)
+            if (numb < 0):
+                error("Expression must be positive!", line)
                 return er
-            elif(table.mnm_0_e[inst] == "data"):
-                if(numb > 255):
-                    error("Expression must evaluate to 8-bit number!",line)
+            elif (table.mnm_0_e[inst] == "data"):
+                if (numb > 255):
+                    error("Expression must evaluate to 8-bit number!", line)
                     return er
-                code.write(numb,line)
-            elif(table.mnm_0_e[inst] == "address"):
-                if(numb > 65535):
-                    error("Expression must evaluate to 16-bit number!",line)
+                code.write(numb, line)
+            elif (table.mnm_0_e[inst] == "address"):
+                if (numb > 65535):
+                    error("Expression must evaluate to 16-bit number!", line)
                     return er
                 else:
-                    code.write((numb & 0xff),line)
-                    code.write((numb >> 8),line)
+                    code.write((numb & 0xff), line)
+                    code.write((numb >> 8), line)
         else:
-            symbols.expr.append([val,table.mnm_0_e[inst]])
-            code.write("expr",line)
-            if(table.mnm_0_e[inst] == "address"):
-                code.write("expr",line)
+            symbols.expr.append([val, table.mnm_0_e[inst]])
+            code.write("expr", line)
+            if (table.mnm_0_e[inst] == "address"):
+                code.write("expr", line)
         return data
 
     ##################################################
     # [mnm_1]
-    elif(tokens[0][0] == "<mnm_1>"):
+    elif (tokens[0][0] == "<mnm_1>"):
         inst = tokens[0][1]
         data.append(tokens.pop(0))
-        if(not tokens):
-            error("Instruction missing register/register-pair",line)
+        if (not tokens):
+            error("Instruction missing register/register-pair", line)
             return er
-        if(tokens[0][0] != "<reg>"):
-            error("Instruction has bad register/register-pair",line)
+        if (tokens[0][0] != "<reg>"):
+            error("Instruction has bad register/register-pair", line)
             return er
         reg = tokens[0][1]
         data.append(tokens.pop(0))
-        if(inst+" "+reg in instructions.instructions):
-            code.write(instructions.instructions[inst+" "+reg],line,instrct=inst+" "+reg)
+        if (inst + " " + reg in instructions.instructions):
+            code.write(instructions.instructions[inst + " " + reg], line, instrct=inst + " " + reg)
         else:
-            error("Bad instruction: "+inst+" "+reg,line)
+            error("Bad instruction: " + inst + " " + reg, line)
             return er
         return data
     ##################################################
     # [mnm_1_e]
-    elif(tokens[0][0] == "<mnm_1_e>"):
+    elif (tokens[0][0] == "<mnm_1_e>"):
         inst = tokens[0][1]
         data.append(tokens.pop(0))
-        if(not tokens):
-            error("Instruction missing register/register-pair!",line)
+        if (not tokens):
+            error("Instruction missing register/register-pair!", line)
             return er
-        if(tokens[0][0] != "<reg>"):
-            error("Instruction has bad register/register-pair!",line)
+        if (tokens[0][0] != "<reg>"):
+            error("Instruction has bad register/register-pair!", line)
             return er
         reg = tokens[0][1]
         data.append(tokens.pop(0))
-        if(not tokens):
-            error("Instruction missing comma and argument!",line)
+        if (not tokens):
+            error("Instruction missing comma and argument!", line)
             return er
-        if(tokens[0][0] != "<comma>"):
-            if(tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
-                error("Instruction has bad argument!",line)
+        if (tokens[0][0] != "<comma>"):
+            if (tokens[0][0] not in {"<08nm>", "<16nm>", "<symbol>"}):
+                error("Instruction has bad argument!", line)
                 return er
-            error("Instruction missing comma!",line)
+            error("Instruction missing comma!", line)
             return er
         data.append(tokens.pop(0))
-        if(not tokens):
-            error("Instruction missing argument!",line)
+        if (not tokens):
+            error("Instruction missing argument!", line)
             return er
         expr = parse_expr(*args)
-        if(not expr):
-            error("Instruction has bad argument!",line)
+        if (not expr):
+            error("Instruction has bad argument!", line)
             return er
-        elif(expr == er):
+        elif (expr == er):
             return er
         data.append(expr)
-        instStr = inst+" "+reg
+        instStr = inst + " " + reg
 
         expr_str = " ".join([x[1] for x in expr[1:]])
-        if(instStr in instructions.instructions):
-            code.write(instructions.instructions[instStr],line,instrct=instStr+", "+expr_str)
+        if (instStr in instructions.instructions):
+            code.write(instructions.instructions[instStr], line, instrct=instStr + ", " + expr_str)
         else:
-            error("Bad instruction: "+instStr,line)
+            error("Bad instruction: " + instStr, line)
             return er
 
-        val = evaluate(expr[1:],symbols,code.address-1)
-        if(len(val) == 1):
+        val = evaluate(expr[1:], symbols, code.address-1)
+        if (len(val) == 1):
             numb = val[0]
-            if(numb < 0):
-                error("Expression must be positive!",line)
+            if (numb < 0):
+                error("Expression must be positive!", line)
                 return er
-            elif(table.mnm_1_e[inst] == "data"):
-                if(numb > 255):
-                    error("Expression must evaluate to 8-bit number!",line)
+            elif (table.mnm_1_e[inst] == "data"):
+                if (numb > 255):
+                    error("Expression must evaluate to 8-bit number!", line)
                     return er
-                code.write(numb,line)
-            elif(table.mnm_1_e[inst] == "address"):
-                if(numb > 65535):
-                    error("Expression must evaluate to 16-bit number!",line)
+                code.write(numb, line)
+            elif (table.mnm_1_e[inst] == "address"):
+                if (numb > 65535):
+                    error("Expression must evaluate to 16-bit number!", line)
                     return er
                 else:
-                    code.write((numb & 0xff),line)
-                    code.write((numb >> 8),line)
+                    code.write((numb & 0xff), line)
+                    code.write((numb >> 8), line)
         else:
-            symbols.expr.append([val,table.mnm_1_e[inst]])
-            code.write("expr",line)
-            if(table.mnm_1_e[inst] == "address"):
-                code.write("expr",line)
+            symbols.expr.append([val, table.mnm_1_e[inst]])
+            code.write("expr", line)
+            if (table.mnm_1_e[inst] == "address"):
+                code.write("expr", line)
 
         return data
 
     ##################################################
     # [mnm_2]
-    elif(tokens[0][0] == "<mnm_2>"):
+    elif (tokens[0][0] == "<mnm_2>"):
         inst = tokens[0][1]
         data.append(tokens.pop(0))
-        if(not tokens):
-            error("Instruction missing register/register-pair!",line)
+        if (not tokens):
+            error("Instruction missing register/register-pair!", line)
             return er
-        if(tokens[0][0] != "<reg>"):
-            error("Instruction has bad register/register-pair!",line)
+        if (tokens[0][0] != "<reg>"):
+            error("Instruction has bad register/register-pair!", line)
             return er
         reg1 = tokens[0][1]
         data.append(tokens.pop(0))
-        if(not tokens):
-            error("Instruction missing comma and register/register-pair!",line)
+        if (not tokens):
+            error("Instruction missing comma and register/register-pair!", line)
             return er
-        if(tokens[0][0] != "<comma>"):
-            if(tokens[0][0] != "<reg>"):
-                error("Instruction has bad register/register-pair!",line)
+        if (tokens[0][0] != "<comma>"):
+            if (tokens[0][0] != "<reg>"):
+                error("Instruction has bad register/register-pair!", line)
                 return er
-            error("Instruction missing comma!",line)
+            error("Instruction missing comma!", line)
             return er
         data.append(tokens.pop(0))
-        if(not tokens):
-            error("Instruction missing register/register-pair!",line)
+        if (not tokens):
+            error("Instruction missing register/register-pair!", line)
             return er
-        if(tokens[0][0] != "<reg>"):
-            error("Instruction has bad register/register-pair!",line)
+        if (tokens[0][0] != "<reg>"):
+            error("Instruction has bad register/register-pair!", line)
             return er
         reg2 = tokens[0][1]
         data.append(tokens.pop(0))
 
-        instStr = inst+" "+reg1+","+reg2
-        if(instStr in instructions.instructions):
-            code.write(instructions.instructions[instStr],line,instrct=instStr)
+        instStr = inst + " " + reg1 + "," + reg2
+        if (instStr in instructions.instructions):
+            code.write(instructions.instructions[instStr], line, instrct=instStr)
         else:
-            error("Bad instruction: "+instStr,line)
+            error("Bad instruction: " + instStr, line)
             return er
         return data
 
     return 0
+
 ######################################################################################
 def parse_line(tokens, symbols, code, line):
     data = ["<line>"]
     er = ["<error>"]
-    if(len(tokens) == 0):
+    if (len(tokens) == 0):
         return 0
     ################################
     # [lbl_def]
     lbl_def = parse_lbl_def(tokens, symbols, code, line)
-    if(lbl_def):
-        if(lbl_def == er):
+    if (lbl_def):
+        if (lbl_def == er):
             return er
         data.append(lbl_def)
     ################################
     # [drct]
     drct = parse_drct(tokens, symbols, code, line)
-    if(drct):
-        if(drct == er):
+    if (drct):
+        if (drct == er):
             return er
         data.append(drct)
     ################################
     # [code]
     code = parse_code(tokens, symbols, code, line)
-    if(code):
-        if(code == er):
+    if (code):
+        if (code == er):
             return er
         data.append(code)
     ###############################
     # check to see that we have at
     # least one of lbl_def, drct,
     # or code
-    if(len(data) < 2):
+    if (len(data) < 2):
         tokens.pop(0)
-        error("Bad Initial Identifier!",line)
+        error("Bad Initial Identifier!", line)
         return er
     ###############################
     # check to see if we have any
     # tokens left
-    if(len(tokens)):   
-        error("Bad Final Identifier!",line)
+    if (len(tokens)):
+        error("Bad Final Identifier!", line)
         return er
     ###############################
     # everything's good
@@ -939,7 +950,7 @@ def parse_line(tokens, symbols, code, line):
 code = Code()
 symbols = Symbol()
 
-outFile = ""
+outFile = ''
 discription = 'A simple 8085 assembler.'
 
 p = argparse.ArgumentParser(description = discription)
@@ -958,20 +969,22 @@ p.add_argument("-S", "--trs100_save", help="in the Model 100 program, SAVEM the 
 p.add_argument("-o", "--out", help="output file name (stdout, if not specified)")
 args = p.parse_args();
 
-if(args.standard and (args.address or args.label or args.instruction and args.hex and args.comment)):
+if args.standard and (args.address or args.label or args.instruction and args.hex and args.comment):
     p.error("-s is mutually exclusive with (-A, -B, -I, -H, -C")
 
-if(args.bin and not args.out):
+if args.bin and not args.out:
     p.error("-b needs a file to output to")
 
-if(args.source):
+if args.source:
     outFile = args.source
 
-if(args.standard):
+if args.standard:
     args.address, args.label, args.instruction, args.hex, args.comment = True, True, True, True, True
 
-parse(read(args.source),symbols,code)
+parse(read(args.source), symbols, code)
 if args.trs100:
-    output_basic(code, (args.out if args.out else ""), args)
+    output_basic(code, (args.out if args.out else ''), args)
 else:
-    output(code, (args.out if args.out else ""), args)
+    output(code, (args.out if args.out else ''), args)
+length = len(code.data)
+print(f"Size: {length} bytes")
