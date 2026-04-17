@@ -174,7 +174,50 @@ def output(code, name, args):
     if f is not sys.stdout:
         f.close()
 
+def output_basic_internal(address, data, name, args):
+    f = open(name, 'w') if name else sys.stdout
+    if name:
+        basename = os.path.basename(name).split('.')[0]
+    else:
+        basename = 'deflt'
+
+    # Break code.data into 60 byte blocks
+    n = 60
+    # Taken from https://www.geeksforgeeks.org/break-list-chunks-size-n-python/
+    chunks = [data[i * n:(i + 1) * n] for i in range((len(code.data) + n - 1) // n )]
+
+    print(f"1?\"Loading {len(chunks)} chunks:\";:X={int(address,16)}:FORI=1TO{len(chunks)}:READD$:?I;", file=f)
+    print("2FORJ=1TOLEN(D$)STEP2:C$=MID$(D$,J,2)", file=f)
+    print("3C=ASC(LEFT$(C$,1))-55:C=C-7*(C<=9):B=ASC(RIGHT$(C$,1))-55:C=C*16+B-7*(B<=9)", file=f)
+    print("4POKEX,C:X=X+1:NEXT:NEXT", file=f)
+    print(f"5?:?\"run CLEAR 256,{int(address, 16)}", file=f)
+    # BASIC line number
+    linenum = 6
+    if args.trs100_save:
+      length = len(data)
+      print(f"{linenum}SAVEM\"{basename}.CO\",{int(address, 16)},{int(address, 16) + length},{int(address, 16)}", file=f)
+      linenum += 1
+    if args.trs100_new:
+      print(f"{linenum}NEW", file=f)
+      linenum += 1
+
+    for chunk in chunks:
+        linedata = ''.join([d[2:] for d in chunk])
+        print(f"{linenum}DATA{linedata}", file=f)
+        linenum += 1
+
+    if f is not sys.stdout:
+        f.close()
+
+def new_output_basic(code, name, args):
+    # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
+    data = [datum[5] for datum in code.data]
+    output_basic_internal(code.data[0][2], data, name, args)
+
 def output_basic(code, name, args):
+    new_output_basic(code, name, args)
+
+def old_output_basic(code, name, args):
     # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
     f = open(name, 'w') if name else sys.stdout
     if name:
