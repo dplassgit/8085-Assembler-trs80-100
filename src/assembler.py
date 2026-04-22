@@ -186,10 +186,9 @@ def output_basic_internal(address, data, name, args):
     # Taken from https://www.geeksforgeeks.org/break-list-chunks-size-n-python/
     chunks = [data[i * n:(i + 1) * n] for i in range((len(code.data) + n - 1) // n )]
 
-    print(f"1?\"Loading {len(chunks)} chunks:\";:X={int(address,16)}:FORI=1TO{len(chunks)}:READD$:?I;", file=f)
-    print("2FORJ=1TOLEN(D$)STEP2:C$=MID$(D$,J,2)", file=f)
-    print("3C=ASC(LEFT$(C$,1))-55:C=C-7*(C<=9):B=ASC(RIGHT$(C$,1))-55:C=C*16+B-7*(B<=9)", file=f)
-    print("4POKEX,C:X=X+1:NEXT:NEXT", file=f)
+    print(f"1definta-w:?\"Loading {len(chunks)} chunks:\";:X={int(address,16)}:FORI=1TO{len(chunks)}:READD$:?I;", file=f)
+    print("2L=LEN(D$):FORJ=1TOLSTEP2:C=ASC(MID$(D$,j,1))-55:C=C-7*(C<=9):B=ASC(MID$(D$,j+1,1))-55", file=f)
+    print("4POKEX,C*16+B-7*(B<=9):X=X+1:NEXT:NEXT", file=f)
     print(f"5?:?\"run CLEAR 256,{int(address, 16)}", file=f)
     # BASIC line number
     linenum = 6
