@@ -208,10 +208,33 @@ def output_basic_internal(address, data, name, args):
     if f is not sys.stdout:
         f.close()
 
+def output_basic_co_internal(address, data, name, args):
+    if not name:
+        print("Must specify an output filename for .co files")
+        return
+    f = open(name, 'wb')
+
+    # Write address bytes
+    addr_hex = int(address, 16)
+    f.write(addr_hex.to_bytes(2, byteorder="little"))
+    # Write length bytes
+    co_length = len(data)
+    f.write(co_length.to_bytes(2, byteorder="little"))
+    # Write address bytes
+    f.write(addr_hex.to_bytes(2, byteorder="little"))
+    # Write data bytes
+    for b in data:
+        f.write(int(b,16).to_bytes(1))
+
+    f.close()
+
 def new_output_basic(code, name, args):
     # Format: [line] [lineNumStr] [address] [label] [instruction + argument] [hex code] [comment]
     data = [datum[5] for datum in code.data]
-    output_basic_internal(code.data[0][2], data, name, args)
+    if args.trs100_co:
+        output_basic_co_internal(code.data[0][2], data, name, args)
+    else:
+        output_basic_internal(code.data[0][2], data, name, args)
 
 def output_basic(code, name, args):
     new_output_basic(code, name, args)
@@ -1013,9 +1036,10 @@ p.add_argument("-H", "--hex", help="include the hex code in output", action="sto
 p.add_argument("-C", "--comment", help="include the comments in output", action="store_true")
 p.add_argument("-s", "--standard", help="equivalent to -A -B -I -H -C", action="store_true")
 p.add_argument("-b", "--bin", help="outputs only binary data", action="store_true")
-p.add_argument("-t", "--trs100", help="creates basic loader for TRS-80 Model 100", action="store_true")
-p.add_argument("-n", "--trs100_new", help="runs 'new' after poking Model 100 program into memory", action="store_true")
-p.add_argument("-S", "--trs100_save", help="in the Model 100 program, SAVEM the binary file", action="store_true")
+p.add_argument("-t", "--trs100", help="creates BASIC loader for Tandy Model 100/102/200", action="store_true")
+p.add_argument("-n", "--trs100_new", help="runs 'NEW' after poking program into memory", action="store_true")
+p.add_argument("-S", "--trs100_save", help="in the Tandy BASIC program, SAVEM the binary file", action="store_true")
+p.add_argument("-c", "--trs100_co", help="write a Tandy .CO file", action="store_true")
 p.add_argument("-o", "--out", help="output file name (stdout, if not specified)")
 args = p.parse_args();
 
