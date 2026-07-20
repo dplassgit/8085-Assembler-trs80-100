@@ -89,9 +89,25 @@ def read(name):
 
             block.append([lineNumber, pc])
             if rest:
-                split_rest = re.split(r'([-+,\s]\s*)', rest)
+                # Extract quoted strings first to preserve spacing within them
+                quoted_strings = []
+                def extract_quoted(match):
+                    quoted_strings.append(match.group(0))
+                    return f"__QUOTED_{len(quoted_strings) - 1}__"
+                
+                # Replace all double-quoted strings with placeholders
+                rest_with_placeholders = re.sub(r'"[^"]*"', extract_quoted, rest)
+                
+                # Now split the remainder normally
+                split_rest = re.split(r'([-+,\s]\s*)', rest_with_placeholders)
                 split_rest = [word for word in split_rest if not re.match(r'^\s*$', word)]
                 split_rest = list(filter(None, split_rest))
+                
+                # Restore the quoted strings from placeholders
+                split_rest = [quoted_strings[int(re.search(r'_(\d+)_', word).group(1))] 
+                             if re.match(r'__QUOTED_\d+__', word) else word 
+                             for word in split_rest]
+                
                 block.append(split_rest)
             else:
                 block.append([])
@@ -463,35 +479,15 @@ def lexer(lines):
     code_lines = [x for x in lines if len(x[1])]
     for line in code_lines:
         tl = []
-        # This is part of the 'dm' bug; "in" breaks on spaces. It's kind of stupid
-        # to break on spaces, because it causes all kinds of weirdness with quoted
-        # strings.
+        # Quoted strings now come from read() as single tokens with spacing preserved
         for wordstr in line[1]:
             word = wordstr.strip()
             #print("DEBUG lexer word /%s/ wordstr /%s/" % (word, wordstr))
             if word in table.mnm_0:
                 tl.append(["<mnm_0>", word])
             elif re.match(r'^\".*\"$', word):
-                # Entire quoted string in this word.
+                # Entire quoted string in this word - already a complete token from read()
                 tl.append(["<08str>", word])
-                continue
-            elif ('"' in wordstr and buildString):
-                # Contains a (closing) double quote
-                buildString = False
-                builtString += wordstr
-                tl.append(["<08str>", builtString.strip()])
-                builtString = ''
-                continue
-            elif buildString:
-                # This is a hack; we force a single space after each word, but there might have been multiple spaces.
-                builtString += wordstr + " "
-                continue
-            elif re.match(r'^\"', word):
-                # Starts with a double quote
-                buildString = True
-                # This is a hack; we force a single space after each word, but there might have been multiple spaces.
-                builtString = wordstr + " "
-                continue
             elif (re.match(r'^\'', word)):
                 tl.append(["<08ch>", word])
             elif (re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
@@ -526,6 +522,9 @@ def lexer(lines):
                 tl.append(["<symbol>", word])
             elif word == "$":
                 tl.append(["<lc>", word])
+            elif word == '':
+                # Skip empty tokens
+                pass
             else:
                 tl.append(["<idk_man>", word])
                 error("Unknown token: " + word, line)
