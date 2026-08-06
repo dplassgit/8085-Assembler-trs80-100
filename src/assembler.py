@@ -494,8 +494,6 @@ def lexer(lines):
                 continue
             elif (re.match(r'^\'', word)):
                 tl.append(["<08ch>", word])
-            elif (re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
-                tl.append(["<08nm>", word])
             elif word in table.mnm_0_e:
                 tl.append(["<mnm_0_e>", word])
             elif word in table.mnm_1:
@@ -504,6 +502,8 @@ def lexer(lines):
                 tl.append(["<mnm_1_e>", word])
             elif word in table.mnm_2:
                 tl.append(["<mnm_2>", word])
+            elif (re.match(r'^(0[Xx])?[0-9A-Fa-f]{2}$', word)):
+                tl.append(["<08nm>", word])
             elif word in table.reg:
                 tl.append(["<reg>", word])
             elif word == ",":
@@ -684,7 +684,6 @@ def parse_drct(tokens, symbols, code, line):
     ##################################################
     # [drct_1]
     if (tokens[0][0] == "<drct_1>"):
-        #print("DEBUG %s" % line)
         data.append(tokens.pop(0))
         if (not tokens):
             error("Directive missing argument 1!", line)
@@ -1004,7 +1003,6 @@ def parse_line(tokens, symbols, code, line):
     # or code
     if (len(data) < 2):
         tokens.pop(0)
-        #print("DEBUG data %s" % data)
         error("Bad Initial Identifier!", line)
         return er
     ###############################
